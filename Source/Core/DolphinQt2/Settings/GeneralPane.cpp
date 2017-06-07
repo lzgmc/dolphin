@@ -140,12 +140,11 @@ void GeneralPane::CreateAdvanced()
 
 void GeneralPane::LoadConfig()
 {
-  auto& settings = Settings::Instance();
-  m_checkbox_force_ntsc->setChecked(settings.GetForceNTSCJ());
-  m_checkbox_enable_analytics->setChecked(settings.GetAnalyticsEnabled());
+  m_checkbox_force_ntsc->setChecked(Settings().GetForceNTSCJ());
+  m_checkbox_enable_analytics->setChecked(Settings().GetAnalyticsEnabled());
   m_checkbox_dualcore->setChecked(SConfig::GetInstance().bCPUThread);
   m_checkbox_cheats->setChecked(SConfig::GetInstance().bEnableCheats);
-  int selection = qRound(settings.GetEmulationSpeed() * 10);
+  int selection = qRound(Settings().GetEmulationSpeed() * 10);
   if (selection < m_combobox_speedlimit->count())
     m_combobox_speedlimit->setCurrentIndex(selection);
   m_checkbox_dualcore->setChecked(SConfig::GetInstance().bCPUThread);
@@ -171,9 +170,8 @@ void GeneralPane::LoadConfig()
 
 void GeneralPane::OnSaveConfig()
 {
-  auto& settings = Settings::Instance();
-  settings.SetForceNTSCJ(m_checkbox_force_ntsc->isChecked());
-  settings.SetAnalyticsEnabled(m_checkbox_enable_analytics->isChecked());
+  Settings().SetForceNTSCJ(m_checkbox_force_ntsc->isChecked());
+  Settings().SetAnalyticsEnabled(m_checkbox_enable_analytics->isChecked());
   SConfig::GetInstance().bCPUThread = m_checkbox_dualcore->isChecked();
   SConfig::GetInstance().bEnableCheats = m_checkbox_cheats->isChecked();
   SConfig::GetInstance().m_EmulationSpeed = m_combobox_speedlimit->currentIndex() * 0.1f;

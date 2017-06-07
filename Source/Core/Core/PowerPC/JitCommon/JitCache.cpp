@@ -10,11 +10,8 @@
 // locating performance issues.
 
 #include <algorithm>
-#include <array>
 #include <cstring>
-#include <functional>
 #include <map>
-#include <set>
 #include <utility>
 
 #include "Common/CommonTypes.h"

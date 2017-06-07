@@ -10,7 +10,6 @@
 #include <array>
 #include <cstddef>
 #include <map>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -218,7 +217,7 @@ public:
   explicit SharedContentMap(Common::FromWhichRoot root);
   ~SharedContentMap();
 
-  std::optional<std::string> GetFilenameFromSHA1(const std::array<u8, 20>& sha1) const;
+  std::string GetFilenameFromSHA1(const std::array<u8, 20>& sha1) const;
   std::string AddSharedContent(const std::array<u8, 20>& sha1);
   bool DeleteSharedContent(const std::array<u8, 20>& sha1);
   std::vector<std::array<u8, 20>> GetHashes() const;

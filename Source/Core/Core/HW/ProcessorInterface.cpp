@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <cstdio>
-#include <memory>
 
 #include "Common/ChunkFile.h"
 #include "Common/CommonTypes.h"

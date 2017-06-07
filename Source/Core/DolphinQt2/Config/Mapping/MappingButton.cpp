@@ -17,8 +17,9 @@
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
 
 MappingButton::MappingButton(MappingWidget* widget, ControlReference* ref)
-    : ElidedButton(QString::fromStdString(ref->expression)), m_parent(widget), m_reference(ref)
+    : QPushButton(QString::fromStdString(ref->expression)), m_parent(widget), m_reference(ref)
 {
+  setText(QString::fromStdString(m_reference->expression));
   Connect();
 }
 

@@ -4,9 +4,7 @@
 
 #include <algorithm>
 #include <cstring>
-#include <memory>
 #include <string>
-#include <vector>
 
 #include "Common/FileUtil.h"
 

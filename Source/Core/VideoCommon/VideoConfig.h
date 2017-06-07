@@ -54,8 +54,10 @@ enum StereoMode
 struct VideoConfig final
 {
   VideoConfig();
-  void Refresh();
+  void Load(const std::string& ini_file);
+  void GameIniLoad();
   void VerifyValidity();
+  void Save(const std::string& ini_file);
   void UpdateProjectionHack();
   bool IsVSync();
 

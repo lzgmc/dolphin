@@ -17,8 +17,6 @@
 #include "Common/StringUtil.h"
 #include "Core/ConfigManager.h"
 
-#include "DolphinQt2/Settings.h"
-
 InterfacePane::InterfacePane(QWidget* parent) : QWidget(parent)
 {
   CreateLayout();
@@ -108,15 +106,14 @@ void InterfacePane::ConnectLayout()
   connect(m_checkbox_top_window, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
   connect(m_checkbox_render_to_window, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
   connect(m_combobox_theme, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::activated),
-          &Settings::Instance(), &Settings::SetThemeName);
+          [this](const QString& text) { OnSaveConfig(); });
   connect(m_combobox_language, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated),
           [this](int index) { OnSaveConfig(); });
   connect(m_checkbox_confirm_on_stop, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
   connect(m_checkbox_use_panic_handlers, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
   connect(m_checkbox_enable_osd, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
   connect(m_checkbox_pause_on_focus_lost, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_hide_mouse, &QCheckBox::clicked, &Settings::Instance(),
-          &Settings::SetHideCursor);
+  connect(m_checkbox_hide_mouse, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
 }
 
 void InterfacePane::LoadConfig()
@@ -134,7 +131,7 @@ void InterfacePane::LoadConfig()
   m_checkbox_enable_osd->setChecked(startup_params.bOnScreenDisplayMessages);
   m_checkbox_show_active_title->setChecked(startup_params.m_show_active_title);
   m_checkbox_pause_on_focus_lost->setChecked(startup_params.m_PauseOnFocusLost);
-  m_checkbox_hide_mouse->setChecked(Settings::Instance().GetHideCursor());
+  m_checkbox_hide_mouse->setChecked(startup_params.bAutoHideCursor);
 }
 
 void InterfacePane::OnSaveConfig()
@@ -143,6 +140,7 @@ void InterfacePane::OnSaveConfig()
   settings.bRenderWindowAutoSize = m_checkbox_auto_window->isChecked();
   settings.bKeepWindowOnTop = m_checkbox_top_window->isChecked();
   settings.bRenderToMain = m_checkbox_render_to_window->isChecked();
+  settings.theme_name = m_combobox_theme->currentText().toStdString();
 
   // In Game Options
   settings.bConfirmStop = m_checkbox_confirm_on_stop->isChecked();
@@ -150,6 +148,7 @@ void InterfacePane::OnSaveConfig()
   settings.bOnScreenDisplayMessages = m_checkbox_enable_osd->isChecked();
   settings.m_show_active_title = m_checkbox_show_active_title->isChecked();
   settings.m_PauseOnFocusLost = m_checkbox_pause_on_focus_lost->isChecked();
+  settings.bAutoHideCursor = m_checkbox_hide_mouse->isChecked();
 
   settings.SaveSettings();
 }

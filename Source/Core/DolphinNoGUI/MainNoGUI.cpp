@@ -18,7 +18,6 @@
 #include "Common/MsgHandler.h"
 
 #include "Core/Analytics.h"
-#include "Core/Boot/Boot.h"
 #include "Core/BootManager.h"
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
@@ -364,7 +363,7 @@ class PlatformX11 : public Platform
 
 static Platform* GetPlatform()
 {
-#if defined(USE_HEADLESS)
+#if defined(USE_EGL) && defined(USE_HEADLESS)
   return new Platform();
 #elif HAVE_X11
   return new PlatformX11();
@@ -423,7 +422,7 @@ int main(int argc, char* argv[])
 
   DolphinAnalytics::Instance()->ReportDolphinStart("nogui");
 
-  if (!BootManager::BootCore(BootParameters::GenerateFromFile(boot_filename)))
+  if (!BootManager::BootCore(boot_filename, SConfig::BOOT_DEFAULT))
   {
     fprintf(stderr, "Could not boot %s\n", boot_filename.c_str());
     return 1;

@@ -5,12 +5,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <functional>
 #include <map>
-#include <memory>
-#include <mutex>
 #include <utility>
-#include <vector>
 
 #include <libusb.h>
 

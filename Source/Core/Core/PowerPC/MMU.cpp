@@ -4,7 +4,6 @@
 
 #include <cstddef>
 #include <cstring>
-#include <string>
 
 #include "Common/Atomic.h"
 #include "Common/BitSet.h"

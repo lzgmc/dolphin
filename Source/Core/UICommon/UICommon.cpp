@@ -7,12 +7,10 @@
 #endif
 
 #include "Common/CommonPaths.h"
-#include "Common/Config/Config.h"
 #include "Common/FileUtil.h"
 #include "Common/Logging/LogManager.h"
 #include "Common/MsgHandler.h"
 
-#include "Core/ConfigLoaders/BaseConfigLoader.h"
 #include "Core/ConfigManager.h"
 #include "Core/HW/Wiimote.h"
 
@@ -28,8 +26,6 @@ namespace UICommon
 void Init()
 {
   LogManager::Init();
-  Config::Init();
-  Config::AddLoadLayer(ConfigLoaders::GenerateBaseConfigLoader());
   SConfig::Init();
   VideoBackendBase::PopulateList();
   WiimoteReal::LoadSettings();
@@ -45,7 +41,6 @@ void Shutdown()
   WiimoteReal::Shutdown();
   VideoBackendBase::ClearList();
   SConfig::Shutdown();
-  Config::Shutdown();
   LogManager::Shutdown();
 }
 

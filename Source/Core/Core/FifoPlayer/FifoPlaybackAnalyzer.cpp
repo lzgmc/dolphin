@@ -4,8 +4,6 @@
 
 #include "Core/FifoPlayer/FifoPlaybackAnalyzer.h"
 
-#include <vector>
-
 #include "Common/CommonTypes.h"
 #include "Core/FifoPlayer/FifoAnalyzer.h"
 #include "Core/FifoPlayer/FifoDataFile.h"

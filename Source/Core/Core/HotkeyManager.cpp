@@ -4,8 +4,6 @@
 
 #include "Core/HotkeyManager.h"
 
-#include <algorithm>
-#include <array>
 #include <string>
 #include <vector>
 

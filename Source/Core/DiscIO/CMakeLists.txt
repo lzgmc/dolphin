@@ -16,7 +16,7 @@ set(SRCS
   VolumeDirectory.cpp
   VolumeGC.cpp
   VolumeWad.cpp
-  VolumeWii.cpp
+  VolumeWiiCrypted.cpp
   WiiWad.cpp
 )
 

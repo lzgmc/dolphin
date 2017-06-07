@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "Core/HW/DSPHLE/MailHandler.h"
-
-#include <queue>
-
 #include "Common/ChunkFile.h"
 #include "Common/CommonTypes.h"
 #include "Common/Logging/Log.h"

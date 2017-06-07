@@ -4,9 +4,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <mutex>
-#include <set>
-#include <string>
 #include <utility>
 
 #ifdef __LIBUSB__

@@ -1,6 +1,5 @@
 set(SRCS
   AudioCommon.cpp
-  AudioStretcher.cpp
   CubebStream.cpp
   CubebUtils.cpp
   DPL2Decoder.cpp

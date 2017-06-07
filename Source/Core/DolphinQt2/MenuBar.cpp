@@ -20,7 +20,7 @@ MenuBar::MenuBar(QWidget* parent) : QMenuBar(parent)
   AddFileMenu();
   AddEmulationMenu();
   addMenu(tr("Movie"));
-  AddOptionsMenu();
+  addMenu(tr("Options"));
   AddToolsMenu();
   AddViewMenu();
   AddHelpMenu();
@@ -140,7 +140,7 @@ void MenuBar::AddStateSlotMenu(QMenu* emu_menu)
     QAction* action = m_state_slot_menu->addAction(QStringLiteral(""));
     action->setCheckable(true);
     action->setActionGroup(m_state_slots);
-    if (Settings::Instance().GetStateSlot() == i)
+    if (Settings().GetStateSlot() == i)
       action->setChecked(true);
 
     connect(action, &QAction::triggered, this, [=]() { emit SetStateSlot(i); });
@@ -169,12 +169,6 @@ void MenuBar::AddViewMenu()
   AddGameListTypeSection(view_menu);
   view_menu->addSeparator();
   AddTableColumnsMenu(view_menu);
-}
-
-void MenuBar::AddOptionsMenu()
-{
-  QMenu* options_menu = addMenu(tr("Options"));
-  options_menu->addAction(tr("Hotkey Settings"), this, &MenuBar::ConfigureHotkeys);
 }
 
 void MenuBar::AddHelpMenu()
@@ -209,7 +203,7 @@ void MenuBar::AddGameListTypeSection(QMenu* view_menu)
   list_group->addAction(table_view);
   list_group->addAction(list_view);
 
-  bool prefer_table = Settings::Instance().GetPreferredView();
+  bool prefer_table = Settings().GetPreferredView();
   table_view->setChecked(prefer_table);
   list_view->setChecked(!prefer_table);
 
@@ -219,16 +213,15 @@ void MenuBar::AddGameListTypeSection(QMenu* view_menu)
 
 void MenuBar::AddTableColumnsMenu(QMenu* view_menu)
 {
-  auto& settings = Settings::Instance();
-  static const QMap<QString, bool*> columns{{tr("Platform"), &settings.PlatformVisible()},
-                                            {tr("ID"), &settings.IDVisible()},
-                                            {tr("Banner"), &settings.BannerVisible()},
-                                            {tr("Title"), &settings.TitleVisible()},
-                                            {tr("Description"), &settings.DescriptionVisible()},
-                                            {tr("Maker"), &settings.MakerVisible()},
-                                            {tr("Size"), &settings.SizeVisible()},
-                                            {tr("Country"), &settings.CountryVisible()},
-                                            {tr("Quality"), &settings.StateVisible()}};
+  static const QMap<QString, bool*> columns{{tr("Platform"), &Settings().PlatformVisible()},
+                                            {tr("ID"), &Settings().IDVisible()},
+                                            {tr("Banner"), &Settings().BannerVisible()},
+                                            {tr("Title"), &Settings().TitleVisible()},
+                                            {tr("Description"), &Settings().DescriptionVisible()},
+                                            {tr("Maker"), &Settings().MakerVisible()},
+                                            {tr("Size"), &Settings().SizeVisible()},
+                                            {tr("Country"), &Settings().CountryVisible()},
+                                            {tr("Quality"), &Settings().StateVisible()}};
 
   QActionGroup* column_group = new QActionGroup(this);
   QMenu* cols_menu = view_menu->addMenu(tr("Table Columns"));
@@ -242,7 +235,7 @@ void MenuBar::AddTableColumnsMenu(QMenu* view_menu)
     action->setChecked(*config);
     connect(action, &QAction::toggled, [this, config, key](bool value) {
       *config = value;
-      Settings::Instance().Save();
+      Settings().Save();
       emit ColumnVisibilityToggled(key, value);
     });
   }

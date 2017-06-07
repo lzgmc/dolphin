@@ -5,7 +5,6 @@
 #include "Core/HW/DSPHLE/UCodes/UCodes.h"
 
 #include <cstring>
-#include <memory>
 #include <string>
 
 #ifdef _WIN32

@@ -24,23 +24,24 @@ namespace DiscIO
 enum class Region;
 
 // TODO: move some of these to Core/IOS/ES.
+bool AddTicket(const IOS::ES::TicketReader& signed_ticket);
 IOS::ES::TicketReader FindSignedTicket(u64 title_id);
 
-class NANDContentData
+class CNANDContentData
 {
 public:
-  virtual ~NANDContentData() = 0;
+  virtual ~CNANDContentData() = 0;
   virtual void Open() {}
   virtual std::vector<u8> Get() = 0;
   virtual bool GetRange(u32 start, u32 size, u8* buffer) = 0;
   virtual void Close() {}
 };
 
-class NANDContentDataFile final : public NANDContentData
+class CNANDContentDataFile final : public CNANDContentData
 {
 public:
-  explicit NANDContentDataFile(const std::string& filename);
-  ~NANDContentDataFile();
+  explicit CNANDContentDataFile(const std::string& filename);
+  ~CNANDContentDataFile();
 
   void Open() override;
   std::vector<u8> Get() override;
@@ -53,11 +54,10 @@ private:
   const std::string m_filename;
   std::unique_ptr<File::IOFile> m_file;
 };
-
-class NANDContentDataBuffer final : public NANDContentData
+class CNANDContentDataBuffer final : public CNANDContentData
 {
 public:
-  explicit NANDContentDataBuffer(const std::vector<u8>& buffer) : m_buffer(buffer) {}
+  explicit CNANDContentDataBuffer(const std::vector<u8>& buffer) : m_buffer(buffer) {}
   std::vector<u8> Get() override { return m_buffer; }
   bool GetRange(u32 start, u32 size, u8* buffer) override;
 
@@ -65,63 +65,59 @@ private:
   const std::vector<u8> m_buffer;
 };
 
-struct NANDContent
+struct SNANDContent
 {
   IOS::ES::Content m_metadata;
-  std::unique_ptr<NANDContentData> m_Data;
+  std::unique_ptr<CNANDContentData> m_Data;
 };
 
-// Instances of this class must be created by NANDContentManager
-class NANDContentLoader final
+// Instances of this class must be created by CNANDContentManager
+class CNANDContentLoader final
 {
 public:
-  explicit NANDContentLoader(const std::string& content_name, Common::FromWhichRoot from);
-  ~NANDContentLoader();
+  explicit CNANDContentLoader(const std::string& content_name);
+  ~CNANDContentLoader();
 
   bool IsValid() const;
-  const NANDContent* GetContentByID(u32 id) const;
-  const NANDContent* GetContentByIndex(int index) const;
+  const SNANDContent* GetContentByID(u32 id) const;
+  const SNANDContent* GetContentByIndex(int index) const;
   const IOS::ES::TMDReader& GetTMD() const { return m_tmd; }
   const IOS::ES::TicketReader& GetTicket() const { return m_ticket; }
-  const std::vector<NANDContent>& GetContent() const { return m_Content; }
+  const std::vector<SNANDContent>& GetContent() const { return m_Content; }
 private:
   bool Initialize(const std::string& name);
   void InitializeContentEntries(const std::vector<u8>& data_app);
 
   bool m_Valid = false;
   bool m_IsWAD = false;
-  Common::FromWhichRoot m_root;
   std::string m_Path;
   IOS::ES::TMDReader m_tmd;
   IOS::ES::TicketReader m_ticket;
 
-  std::vector<NANDContent> m_Content;
+  std::vector<SNANDContent> m_Content;
 };
 
 // we open the NAND Content files too often... let's cache them
-class NANDContentManager
+class CNANDContentManager
 {
 public:
-  static NANDContentManager& Access()
+  static CNANDContentManager& Access()
   {
-    static NANDContentManager instance;
+    static CNANDContentManager instance;
     return instance;
   }
 
-  const NANDContentLoader&
-  GetNANDLoader(const std::string& content_path,
-                Common::FromWhichRoot from = Common::FROM_CONFIGURED_ROOT);
-  const NANDContentLoader&
-  GetNANDLoader(u64 title_id, Common::FromWhichRoot from = Common::FROM_CONFIGURED_ROOT);
+  const CNANDContentLoader& GetNANDLoader(const std::string& content_path);
+  const CNANDContentLoader& GetNANDLoader(u64 title_id, Common::FromWhichRoot from);
   void ClearCache();
 
 private:
-  NANDContentManager() {}
-  ~NANDContentManager();
+  CNANDContentManager() {}
+  ~CNANDContentManager();
 
-  NANDContentManager(NANDContentManager const&) = delete;
-  void operator=(NANDContentManager const&) = delete;
+  CNANDContentManager(CNANDContentManager const&) = delete;
+  void operator=(CNANDContentManager const&) = delete;
 
-  std::unordered_map<std::string, std::unique_ptr<NANDContentLoader>> m_map;
+  std::unordered_map<std::string, std::unique_ptr<CNANDContentLoader>> m_map;
 };
 }

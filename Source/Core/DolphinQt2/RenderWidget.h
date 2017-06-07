@@ -22,7 +22,4 @@ signals:
   void HandleChanged(void* handle);
   void FocusChanged(bool focus);
   void StateChanged(bool fullscreen);
-
-private:
-  void OnHideCursorChanged();
 };

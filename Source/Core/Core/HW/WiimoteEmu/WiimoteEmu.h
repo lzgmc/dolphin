@@ -42,78 +42,6 @@ namespace WiimoteReal
 }
 namespace WiimoteEmu
 {
-
-enum class WiimoteGroup
-{
-  Buttons,
-  DPad,
-  Shake,
-  IR,
-  Tilt,
-  Swing,
-  Rumble,
-  Extension,
-
-  Options,
-  Hotkeys
-};
-
-enum
-{
-  EXT_NONE,
-
-  EXT_NUNCHUK,
-  EXT_CLASSIC,
-  EXT_GUITAR,
-  EXT_DRUMS,
-  EXT_TURNTABLE
-};
-
-enum class NunchukGroup
-{
-  Buttons,
-  Stick,
-  Tilt,
-  Swing,
-  Shake
-};
-
-enum class ClassicGroup
-{
-  Buttons,
-  Triggers,
-  DPad,
-  LeftStick,
-  RightStick
-};
-
-enum class GuitarGroup
-{
-  Buttons,
-  Frets,
-  Strum,
-  Whammy,
-  Stick,
-  SliderBar
-};
-
-enum class DrumsGroup
-{
-  Buttons,
-  Pads,
-  Stick
-};
-
-enum class TurntableGroup
-{
-  Buttons,
-  Stick,
-  EffectDial,
-  LeftTable,
-  RightTable,
-  Crossfade
-};
-=======
 	enum class WiimoteGroup
 	{
 		Buttons,
@@ -183,7 +111,6 @@ enum class TurntableGroup
 		RightTable,
 		Crossfade
 	};
-
 #pragma pack(push, 1)
 
 	struct ReportFeatures

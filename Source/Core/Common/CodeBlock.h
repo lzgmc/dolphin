@@ -44,11 +44,11 @@ public:
   }
 
   // Call this before you generate any code.
-  void AllocCodeSpace(size_t size)
+  void AllocCodeSpace(size_t size, bool need_low = true)
   {
     region_size = size;
     total_region_size = size;
-    region = static_cast<u8*>(Common::AllocateExecutableMemory(total_region_size));
+    region = static_cast<u8*>(Common::AllocateExecutableMemory(total_region_size, need_low));
     T::SetCodePtr(region);
   }
 

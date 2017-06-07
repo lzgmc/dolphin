@@ -12,7 +12,6 @@ class AnalogStick;
 class Buttons;
 class ControlGroup;
 class Triggers;
-class Slider;
 }
 
 namespace WiimoteEmu
@@ -49,6 +48,5 @@ private:
   ControllerEmu::Buttons* m_strum;
   ControllerEmu::Triggers* m_whammy;
   ControllerEmu::AnalogStick* m_stick;
-  ControllerEmu::Slider* m_slider_bar;
 };
 }
