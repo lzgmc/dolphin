@@ -20,6 +20,12 @@
 #include "DolphinQt2/Config/Mapping/GCKeyboardEmu.h"
 #include "DolphinQt2/Config/Mapping/GCPadEmu.h"
 #include "DolphinQt2/Config/Mapping/GCPadWiiU.h"
+#include "DolphinQt2/Config/Mapping/Hotkey3D.h"
+#include "DolphinQt2/Config/Mapping/HotkeyGeneral.h"
+#include "DolphinQt2/Config/Mapping/HotkeyGraphics.h"
+#include "DolphinQt2/Config/Mapping/HotkeyStates.h"
+#include "DolphinQt2/Config/Mapping/HotkeyTAS.h"
+#include "DolphinQt2/Config/Mapping/HotkeyWii.h"
 #include "DolphinQt2/Config/Mapping/WiimoteEmuExtension.h"
 #include "DolphinQt2/Config/Mapping/WiimoteEmuGeneral.h"
 #include "DolphinQt2/Config/Mapping/WiimoteEmuMotionControl.h"
@@ -126,8 +132,9 @@ void MappingWindow::ConnectWidgets()
 
 void MappingWindow::OnDeleteProfilePressed()
 {
+  auto& settings = Settings::Instance();
   const QString profile_name = m_profiles_combo->currentText();
-  if (!Settings().GetProfiles(m_config).contains(profile_name))
+  if (!settings.GetProfiles(m_config).contains(profile_name))
   {
     QMessageBox error;
     error.setIcon(QMessageBox::Critical);
@@ -153,7 +160,7 @@ void MappingWindow::OnDeleteProfilePressed()
 
   QMessageBox result(this);
 
-  std::string profile_path = Settings().GetProfileINIPath(m_config, profile_name).toStdString();
+  std::string profile_path = settings.GetProfileINIPath(m_config, profile_name).toStdString();
 
   File::CreateFullPath(profile_path);
 
@@ -170,7 +177,8 @@ void MappingWindow::OnLoadProfilePressed()
   if (profile_name.isEmpty())
     return;
 
-  std::string profile_path = Settings().GetProfileINIPath(m_config, profile_name).toStdString();
+  std::string profile_path =
+      Settings::Instance().GetProfileINIPath(m_config, profile_name).toStdString();
 
   File::CreateFullPath(profile_path);
 
@@ -192,7 +200,8 @@ void MappingWindow::OnSaveProfilePressed()
   if (profile_name.isEmpty())
     return;
 
-  std::string profile_path = Settings().GetProfileINIPath(m_config, profile_name).toStdString();
+  std::string profile_path =
+      Settings::Instance().GetProfileINIPath(m_config, profile_name).toStdString();
 
   File::CreateFullPath(profile_path);
 
@@ -282,6 +291,18 @@ void MappingWindow::ChangeMappingType(MappingWindow::Type type)
     AddWidget(tr("Extension"), extension);
     break;
   }
+  case Type::MAPPING_HOTKEYS:
+  {
+    widget = new HotkeyGeneral(this);
+    AddWidget(tr("General"), widget);
+    AddWidget(tr("TAS Tools"), new HotkeyTAS(this));
+    AddWidget(tr("Wii (Remote)"), new HotkeyWii(this));
+    AddWidget(tr("Graphics"), new HotkeyGraphics(this));
+    AddWidget(tr("3D"), new Hotkey3D(this));
+    AddWidget(tr("Save States"), new HotkeyStates(this));
+    setWindowTitle(tr("Hotkey Settings"));
+    break;
+  }
   default:
     return;
   }
@@ -297,7 +318,7 @@ void MappingWindow::ChangeMappingType(MappingWindow::Type type)
     m_controller = m_config->GetController(GetPort());
 
     m_profiles_combo->addItem(QStringLiteral(""));
-    for (const auto& item : Settings().GetProfiles(m_config))
+    for (const auto& item : Settings::Instance().GetProfiles(m_config))
       m_profiles_combo->addItem(item);
   }
 

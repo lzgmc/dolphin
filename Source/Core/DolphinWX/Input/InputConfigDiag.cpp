@@ -962,6 +962,234 @@ bool ControlGroupBox::HasBitmapHeading() const
 }
 
 ControlGroupBox::ControlGroupBox(ControllerEmu::ControlGroup* const group, wxWindow* const parent,
+                                 InputConfigDialog* eventsink)
+    : wxStaticBoxSizer(wxVERTICAL, parent, wxGetTranslation(StrToWxStr(group->ui_name))),
+      control_group(group), static_bitmap(nullptr), m_scale(1)
+{
+  static constexpr std::array<const char* const, 2> exclude_buttons{{"Mic", "Modifier"}};
+  static constexpr std::array<const char* const, 7> exclude_groups{
+      {"IR", "Swing", "Tilt", "Shake", "UDP Wiimote", "Extension", "Rumble"}};
+
+  wxFont small_font(7, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+  const int space3 = parent->FromDIP(3);
+
+  wxFlexGridSizer* control_grid = new wxFlexGridSizer(2, 0, space3);
+  control_grid->AddGrowableCol(0);
+  for (const auto& control : group->controls)
+  {
+    wxStaticText* const label =
+        new wxStaticText(parent, wxID_ANY, wxGetTranslation(StrToWxStr(control->ui_name)));
+
+    ControlButton* const control_button =
+        new ControlButton(parent, control->control_ref.get(), control->ui_name, 80);
+    control_button->SetFont(small_font);
+
+    control_buttons.push_back(control_button);
+    if (std::find(exclude_groups.begin(), exclude_groups.end(), control_group->name) ==
+            exclude_groups.end() &&
+        std::find(exclude_buttons.begin(), exclude_buttons.end(), control->ui_name) ==
+            exclude_buttons.end())
+      eventsink->control_buttons.push_back(control_button);
+
+    if (control->control_ref->IsInput())
+    {
+      control_button->SetToolTip(
+          _("Left-click to detect input.\nMiddle-click to clear.\nRight-click for more options."));
+      control_button->Bind(wxEVT_BUTTON, &InputConfigDialog::DetectControl, eventsink);
+    }
+    else
+    {
+      control_button->SetToolTip(_("Left/Right-click for more options.\nMiddle-click to clear."));
+      control_button->Bind(wxEVT_BUTTON, &InputConfigDialog::ConfigControl, eventsink);
+    }
+
+    control_button->Bind(wxEVT_MIDDLE_DOWN, &InputConfigDialog::ClearControl, eventsink);
+    control_button->Bind(wxEVT_RIGHT_UP, &InputConfigDialog::ConfigControl, eventsink);
+
+    control_grid->Add(label, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
+    control_grid->Add(control_button, 0, wxALIGN_CENTER_VERTICAL);
+  }
+  Add(control_grid, 0, wxEXPAND | wxLEFT | wxRIGHT, space3);
+
+  switch (group->type)
+  {
+  case ControllerEmu::GroupType::Stick:
+  case ControllerEmu::GroupType::Tilt:
+  case ControllerEmu::GroupType::Cursor:
+  case ControllerEmu::GroupType::Force:
+  {
+    wxSize bitmap_size = parent->FromDIP(wxSize(64, 64));
+    m_scale = bitmap_size.GetWidth() / 64.0;
+
+    wxBitmap bitmap;
+    bitmap.CreateScaled(bitmap_size.GetWidth(), bitmap_size.GetHeight(), wxBITMAP_SCREEN_DEPTH,
+                        parent->GetContentScaleFactor());
+    wxMemoryDC dc(bitmap);
+    dc.Clear();
+    dc.SelectObject(wxNullBitmap);
+    static_bitmap = new wxStaticBitmap(parent, wxID_ANY, bitmap, wxDefaultPosition, wxDefaultSize,
+                                       wxBITMAP_TYPE_BMP);
+
+    wxBoxSizer* const szr = new wxBoxSizer(wxVERTICAL);
+    for (auto& groupSetting : group->numeric_settings)
+    {
+      PadSettingSpin* setting = new PadSettingSpin(parent, groupSetting.get());
+      setting->wxcontrol->Bind(wxEVT_SPINCTRL, &InputConfigDialog::AdjustSetting, eventsink);
+      options.push_back(setting);
+      szr->Add(
+          new wxStaticText(parent, wxID_ANY, wxGetTranslation(StrToWxStr(groupSetting->m_name))));
+      szr->Add(setting->wxcontrol);
+    }
+    for (auto& groupSetting : group->boolean_settings)
+    {
+      auto* checkbox = new PadSettingCheckBox(parent, groupSetting.get());
+      checkbox->wxcontrol->Bind(wxEVT_CHECKBOX, &InputConfigDialog::AdjustBooleanSetting,
+                                eventsink);
+      options.push_back(checkbox);
+      Add(checkbox->wxcontrol, 0, wxALL | wxLEFT, space3);
+    }
+
+    wxBoxSizer* const h_szr = new wxBoxSizer(wxHORIZONTAL);
+    h_szr->Add(szr, 1, wxEXPAND | wxTOP | wxBOTTOM, space3);
+    h_szr->AddSpacer(space3);
+    h_szr->Add(static_bitmap, 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxBOTTOM, space3);
+
+    AddSpacer(space3);
+    Add(h_szr, 0, wxEXPAND | wxLEFT | wxRIGHT, space3);
+  }
+  break;
+  case ControllerEmu::GroupType::Buttons:
+  {
+    // Draw buttons in rows of 8
+    unsigned int button_cols = group->controls.size() > 8 ? 8 : group->controls.size();
+    unsigned int button_rows = ceil((float)group->controls.size() / 8.0f);
+    wxSize bitmap_size(12 * button_cols + 1, 11 * button_rows + 1);
+    wxSize bitmap_scaled_size = parent->FromDIP(bitmap_size);
+    m_scale = static_cast<double>(bitmap_scaled_size.GetWidth()) / bitmap_size.GetWidth();
+
+    wxBitmap bitmap;
+    bitmap.CreateScaled(bitmap_scaled_size.GetWidth(), bitmap_scaled_size.GetHeight(),
+                        wxBITMAP_SCREEN_DEPTH, parent->GetContentScaleFactor());
+    wxMemoryDC dc(bitmap);
+    dc.Clear();
+    dc.SelectObject(wxNullBitmap);
+    static_bitmap = new wxStaticBitmap(parent, wxID_ANY, bitmap, wxDefaultPosition, wxDefaultSize,
+                                       wxBITMAP_TYPE_BMP);
+
+    auto* const threshold_cbox = new PadSettingSpin(parent, group->numeric_settings[0].get());
+    threshold_cbox->wxcontrol->Bind(wxEVT_SPINCTRL, &InputConfigDialog::AdjustSetting, eventsink);
+
+    threshold_cbox->wxcontrol->SetToolTip(
+        _("Adjust the analog control pressure required to activate buttons."));
+
+    options.push_back(threshold_cbox);
+
+    wxBoxSizer* const szr = new wxBoxSizer(wxHORIZONTAL);
+    szr->Add(new wxStaticText(parent, wxID_ANY,
+                              wxGetTranslation(StrToWxStr(group->numeric_settings[0]->m_name))),
+             0, wxALIGN_CENTER_VERTICAL | wxRIGHT, space3);
+    szr->Add(threshold_cbox->wxcontrol, 0, wxRIGHT, space3);
+
+    AddSpacer(space3);
+    Add(szr, 0, wxALIGN_CENTER_HORIZONTAL | wxLEFT | wxRIGHT, space3);
+    AddSpacer(space3);
+    Add(static_bitmap, 0, wxALIGN_CENTER_HORIZONTAL | wxLEFT | wxRIGHT, space3);
+  }
+  break;
+  case ControllerEmu::GroupType::MixedTriggers:
+  case ControllerEmu::GroupType::Triggers:
+  case ControllerEmu::GroupType::Slider:
+  {
+    int height = (int)(12 * group->controls.size());
+    int width = 64;
+
+    if (group->type == ControllerEmu::GroupType::MixedTriggers)
+      width = 64 + 12 + 1;
+
+    if (group->type != ControllerEmu::GroupType::Triggers)
+      height /= 2;
+    height += 1;
+
+    wxSize bitmap_size = parent->FromDIP(wxSize(width, height));
+    m_scale = static_cast<double>(bitmap_size.GetWidth()) / width;
+    wxBitmap bitmap;
+    bitmap.CreateScaled(bitmap_size.GetWidth(), bitmap_size.GetHeight(), wxBITMAP_SCREEN_DEPTH,
+                        parent->GetContentScaleFactor());
+    wxMemoryDC dc(bitmap);
+    dc.Clear();
+    dc.SelectObject(wxNullBitmap);
+    static_bitmap = new wxStaticBitmap(parent, wxID_ANY, bitmap, wxDefaultPosition, wxDefaultSize,
+                                       wxBITMAP_TYPE_BMP);
+
+    for (auto& groupSetting : group->numeric_settings)
+    {
+      PadSettingSpin* setting = new PadSettingSpin(parent, groupSetting.get());
+      setting->wxcontrol->Bind(wxEVT_SPINCTRL, &InputConfigDialog::AdjustSetting, eventsink);
+      options.push_back(setting);
+      wxBoxSizer* const szr = new wxBoxSizer(wxHORIZONTAL);
+      szr->Add(
+          new wxStaticText(parent, wxID_ANY, wxGetTranslation(StrToWxStr(groupSetting->m_name))), 0,
+          wxALIGN_CENTER_VERTICAL);
+      szr->Add(setting->wxcontrol, 0, wxLEFT, space3);
+
+      AddSpacer(space3);
+      Add(szr, 0, wxALIGN_CENTER_HORIZONTAL | wxLEFT | wxRIGHT, space3);
+    }
+
+    AddSpacer(space3);
+    Add(static_bitmap, 0, wxALIGN_CENTER_HORIZONTAL | wxLEFT | wxRIGHT, space3);
+  }
+  break;
+  case ControllerEmu::GroupType::Extension:
+  {
+    PadSettingExtension* const attachments =
+        new PadSettingExtension(parent, (ControllerEmu::Extension*)group);
+    wxButton* const configure_btn = new ExtensionButton(parent, (ControllerEmu::Extension*)group);
+
+    options.push_back(attachments);
+
+    attachments->wxcontrol->Bind(wxEVT_CHOICE, &InputConfigDialog::AdjustSetting, eventsink);
+    configure_btn->Bind(wxEVT_BUTTON, &InputConfigDialog::ConfigExtension, eventsink);
+
+    AddSpacer(space3);
+    Add(attachments->wxcontrol, 0, wxEXPAND | wxLEFT | wxRIGHT, space3);
+    AddSpacer(space3);
+    Add(configure_btn, 0, wxEXPAND | wxLEFT | wxRIGHT, space3);
+  }
+  break;
+  default:
+  {
+    // options
+    for (auto& groupSetting : group->boolean_settings)
+    {
+      PadSettingCheckBox* setting_cbox = new PadSettingCheckBox(parent, groupSetting.get());
+      setting_cbox->wxcontrol->Bind(wxEVT_CHECKBOX, &InputConfigDialog::AdjustBooleanSetting,
+                                    eventsink);
+      if (groupSetting->m_name == "Iterative Input")
+        groupSetting->SetValue(false);
+      options.push_back(setting_cbox);
+      AddSpacer(space3);
+      Add(setting_cbox->wxcontrol, 0, wxLEFT | wxRIGHT, space3);
+    }
+    for (auto& groupSetting : group->numeric_settings)
+    {
+      PadSettingSpin* setting = new PadSettingSpin(parent, groupSetting.get());
+      setting->wxcontrol->Bind(wxEVT_SPINCTRL, &InputConfigDialog::AdjustSetting, eventsink);
+      options.push_back(setting);
+      wxBoxSizer* const szr = new wxBoxSizer(wxHORIZONTAL);
+      szr->Add(
+          new wxStaticText(parent, wxID_ANY, wxGetTranslation(StrToWxStr(groupSetting->m_name))), 0,
+          wxALIGN_CENTER_VERTICAL, space3);
+      szr->Add(setting->wxcontrol, 0, wxLEFT, space3);
+      AddSpacer(space3);
+      Add(szr, 0, wxLEFT | wxRIGHT | wxALIGN_RIGHT, space3);
+    }
+    break;
+  }
+  }
+  AddSpacer(space3);
+  eventsink->control_groups.push_back(this);
+=======
 	InputConfigDialog* eventsink)
 	: wxStaticBoxSizer(wxVERTICAL, parent, wxGetTranslation(StrToWxStr(group->ui_name))),
 	control_group(group), static_bitmap(nullptr), m_scale(1)

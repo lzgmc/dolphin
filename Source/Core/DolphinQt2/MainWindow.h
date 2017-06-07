@@ -14,7 +14,8 @@
 #include "DolphinQt2/RenderWidget.h"
 #include "DolphinQt2/ToolBar.h"
 
-class PathDialog;
+class HotkeyScheduler;
+class MappingWindow;
 class SettingsWindow;
 class ControllersWindow;
 
@@ -59,22 +60,23 @@ private:
   void CreateComponents();
 
   void ConnectGameList();
+  void ConnectHotkeys();
   void ConnectMenuBar();
   void ConnectRenderWidget();
   void ConnectStack();
   void ConnectToolBar();
-  void ConnectPathsDialog();
 
   void InitControllers();
+  void ShutdownControllers();
 
   void StartGame(const QString& path);
   void ShowRenderWidget();
   void HideRenderWidget();
 
-  void ShowPathsDialog();
   void ShowSettingsWindow();
   void ShowControllersWindow();
   void ShowAboutDialog();
+  void ShowHotkeyDialog();
 
   QStackedWidget* m_stack;
   ToolBar* m_tool_bar;
@@ -84,7 +86,8 @@ private:
   bool m_rendering_to_main;
   int m_state_slot = 1;
 
-  PathDialog* m_paths_dialog;
+  HotkeyScheduler* m_hotkey_scheduler;
   ControllersWindow* m_controllers_window;
   SettingsWindow* m_settings_window;
+  MappingWindow* m_hotkey_window;
 };
