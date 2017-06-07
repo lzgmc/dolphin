@@ -9,21 +9,21 @@
 
 namespace DiscIO
 {
-FileSystem::FileSystem(const Volume* _rVolume, const Partition& partition)
+IFileSystem::IFileSystem(const IVolume* _rVolume, const Partition& partition)
     : m_rVolume(_rVolume), m_partition(partition)
 {
 }
 
-FileSystem::~FileSystem()
+IFileSystem::~IFileSystem()
 {
 }
 
-std::unique_ptr<FileSystem> CreateFileSystem(const Volume* volume, const Partition& partition)
+std::unique_ptr<IFileSystem> CreateFileSystem(const IVolume* volume, const Partition& partition)
 {
   if (!volume)
     return nullptr;
 
-  std::unique_ptr<FileSystem> filesystem = std::make_unique<FileSystemGCWii>(volume, partition);
+  std::unique_ptr<IFileSystem> filesystem = std::make_unique<CFileSystemGCWii>(volume, partition);
 
   if (!filesystem)
     return nullptr;

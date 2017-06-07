@@ -6,7 +6,6 @@
 
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,13 +29,13 @@ enum class Language;
 enum class Region;
 enum class Platform;
 
-class VolumeDirectory : public Volume
+class CVolumeDirectory : public IVolume
 {
 public:
-  VolumeDirectory(const std::string& directory, bool is_wii, const std::string& apploader = "",
-                  const std::string& dol = "");
+  CVolumeDirectory(const std::string& directory, bool is_wii, const std::string& apploader = "",
+                   const std::string& dol = "");
 
-  ~VolumeDirectory();
+  ~CVolumeDirectory();
 
   static bool IsValidDirectory(const std::string& directory);
 
@@ -49,14 +48,13 @@ public:
 
   std::string GetMakerID(const Partition& partition = PARTITION_NONE) const override;
 
-  std::optional<u16> GetRevision(const Partition& partition = PARTITION_NONE) const override
-  {
-    return {};
-  }
+  u16 GetRevision(const Partition& partition = PARTITION_NONE) const override { return 0; }
   std::string GetInternalName(const Partition& partition = PARTITION_NONE) const override;
   std::map<Language, std::string> GetLongNames() const override;
   std::vector<u32> GetBanner(int* width, int* height) const override;
   void SetName(const std::string&);
+
+  u64 GetFSTSize(const Partition& partition = PARTITION_NONE) const override;
 
   std::string GetApploaderDate(const Partition& partition = PARTITION_NONE) const override;
   Platform GetVolumeType() const override;

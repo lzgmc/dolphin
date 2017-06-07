@@ -7,7 +7,6 @@
 #include <QAbstractTableModel>
 #include <QString>
 
-#include "Core/TitleDatabase.h"
 #include "DolphinQt2/GameList/GameFile.h"
 #include "DolphinQt2/GameList/GameTracker.h"
 
@@ -30,13 +29,13 @@ public:
   enum
   {
     COL_PLATFORM = 0,
+    COL_ID,
     COL_BANNER,
     COL_TITLE,
     COL_DESCRIPTION,
     COL_MAKER,
-    COL_ID,
-    COL_COUNTRY,
     COL_SIZE,
+    COL_COUNTRY,
     COL_RATING,
     NUM_COLS
   };
@@ -55,5 +54,4 @@ private:
 
   GameTracker m_tracker;
   QList<QSharedPointer<GameFile>> m_games;
-  Core::TitleDatabase m_title_database;
 };

@@ -7,7 +7,6 @@
 #include <array>
 #include <bitset>
 
-#include "Core/Config/Config.h"
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
 #include "Core/CoreTiming.h"
@@ -37,7 +36,6 @@ public:
   ScopeInit()
   {
     Core::DeclareAsCPUThread();
-    Config::Init();
     SConfig::Init();
     PowerPC::Init(PowerPC::CORE_INTERPRETER);
     CoreTiming::Init();
@@ -47,7 +45,6 @@ public:
     CoreTiming::Shutdown();
     PowerPC::Shutdown();
     SConfig::Shutdown();
-    Config::Shutdown();
     Core::UndeclareAsCPUThread();
   }
 };

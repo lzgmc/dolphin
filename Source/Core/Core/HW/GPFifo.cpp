@@ -4,7 +4,6 @@
 
 #include "Core/HW/GPFifo.h"
 
-#include <cstddef>
 #include <cstring>
 
 #include "Common/ChunkFile.h"

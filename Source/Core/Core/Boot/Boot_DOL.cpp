@@ -2,7 +2,7 @@
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
 
-#include "Core/Boot/DolReader.h"
+#include "Core/Boot/Boot_DOL.h"
 
 #include <cstring>
 #include <string>
@@ -12,19 +12,29 @@
 #include "Common/Swap.h"
 #include "Core/HW/Memmap.h"
 
-DolReader::DolReader(const std::vector<u8>& buffer) : BootExecutableReader(buffer)
+CDolLoader::CDolLoader(const std::vector<u8>& buffer)
 {
   m_is_valid = Initialize(buffer);
 }
 
-DolReader::DolReader(const std::string& filename) : BootExecutableReader(filename)
+CDolLoader::CDolLoader(const std::string& filename)
 {
-  m_is_valid = Initialize(m_bytes);
+  const u64 size = File::GetSize(filename);
+  std::vector<u8> temp_buffer(size);
+
+  {
+    File::IOFile pStream(filename, "rb");
+    pStream.ReadBytes(temp_buffer.data(), temp_buffer.size());
+  }
+
+  m_is_valid = Initialize(temp_buffer);
 }
 
-DolReader::~DolReader() = default;
+CDolLoader::~CDolLoader()
+{
+}
 
-bool DolReader::Initialize(const std::vector<u8>& buffer)
+bool CDolLoader::Initialize(const std::vector<u8>& buffer)
 {
   if (buffer.size() < sizeof(SDolHeader))
     return false;
@@ -87,30 +97,17 @@ bool DolReader::Initialize(const std::vector<u8>& buffer)
   return true;
 }
 
-bool DolReader::LoadIntoMemory(bool only_in_mem1) const
+void CDolLoader::Load() const
 {
-  if (!m_is_valid)
-    return false;
-
   // load all text (code) sections
   for (size_t i = 0; i < m_text_sections.size(); ++i)
-    if (!m_text_sections[i].empty() &&
-        !(only_in_mem1 &&
-          m_dolheader.textAddress[i] + m_text_sections[i].size() >= Memory::REALRAM_SIZE))
-    {
+    if (!m_text_sections[i].empty())
       Memory::CopyToEmu(m_dolheader.textAddress[i], m_text_sections[i].data(),
                         m_text_sections[i].size());
-    }
 
   // load all data sections
   for (size_t i = 0; i < m_data_sections.size(); ++i)
-    if (!m_data_sections[i].empty() &&
-        !(only_in_mem1 &&
-          m_dolheader.dataAddress[i] + m_data_sections[i].size() >= Memory::REALRAM_SIZE))
-    {
+    if (!m_data_sections[i].empty())
       Memory::CopyToEmu(m_dolheader.dataAddress[i], m_data_sections[i].data(),
                         m_data_sections[i].size());
-    }
-
-  return true;
 }

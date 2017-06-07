@@ -8,7 +8,6 @@
 #include "Common/Logging/Log.h"
 #include "Common/MsgHandler.h"
 #include "Common/StringUtil.h"
-#include "Core/Config/GraphicsSettings.h"
 #include "Core/ConfigManager.h"
 #include "VideoBackends/D3D/D3DBase.h"
 #include "VideoBackends/D3D/D3DState.h"
@@ -320,7 +319,7 @@ HRESULT Create(HWND wnd)
         return desc.Count == g_Config.iMultisamples;
       }) == aa_modes.end())
   {
-    Config::SetCurrent(Config::GFX_MSAA, 1);
+    g_Config.iMultisamples = 1;
     UpdateActiveConfig();
   }
 

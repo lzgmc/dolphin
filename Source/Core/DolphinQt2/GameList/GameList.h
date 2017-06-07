@@ -42,6 +42,8 @@ private slots:
 
 signals:
   void GameSelected();
+  void DirectoryAdded(const QString& dir);
+  void DirectoryRemoved(const QString& dir);
 
 private:
   void MakeTableView();

@@ -7,9 +7,6 @@
 #include <QIcon>
 #include <QMessageBox>
 
-#include "Common/Common.h"
-
-#include "Core/Boot/Boot.h"
 #include "Core/BootManager.h"
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
@@ -25,13 +22,10 @@
 
 #include "DolphinQt2/AboutDialog.h"
 #include "DolphinQt2/Config/ControllersWindow.h"
-
-#include "DolphinQt2/Config/Mapping/MappingWindow.h"
+#include "DolphinQt2/Config/PathDialog.h"
 #include "DolphinQt2/Config/SettingsWindow.h"
 #include "DolphinQt2/Host.h"
-#include "DolphinQt2/HotkeyScheduler.h"
 #include "DolphinQt2/MainWindow.h"
-#include "DolphinQt2/QtUtils/FocusEventFilter.h"
 #include "DolphinQt2/Resources.h"
 #include "DolphinQt2/Settings.h"
 
@@ -39,13 +33,14 @@
 
 MainWindow::MainWindow() : QMainWindow(nullptr)
 {
-  setWindowTitle(QString::fromStdString(scm_rev_str));
+  setWindowTitle(tr("Dolphin"));
   setWindowIcon(QIcon(Resources::GetMisc(Resources::LOGO_SMALL)));
   setUnifiedTitleAndToolBarOnMac(true);
 
   CreateComponents();
 
   ConnectGameList();
+  ConnectPathsDialog();
   ConnectToolBar();
   ConnectRenderWidget();
   ConnectStack();
@@ -57,7 +52,6 @@ MainWindow::MainWindow() : QMainWindow(nullptr)
 MainWindow::~MainWindow()
 {
   m_render_widget->deleteLater();
-  ShutdownControllers();
 }
 
 void MainWindow::InitControllers()
@@ -69,32 +63,7 @@ void MainWindow::InitControllers()
   Pad::Initialize();
   Keyboard::Initialize();
   Wiimote::Initialize(Wiimote::InitializeMode::DO_NOT_WAIT_FOR_WIIMOTES);
-  m_hotkey_scheduler = new HotkeyScheduler();
-  m_hotkey_scheduler->Start();
-
-  ConnectHotkeys();
-}
-
-void MainWindow::ShutdownControllers()
-{
-  m_hotkey_scheduler->Stop();
-
-  g_controller_interface.Shutdown();
-  Pad::Shutdown();
-  Keyboard::Shutdown();
-  Wiimote::Shutdown();
-  HotkeyManagerEmu::Shutdown();
-
-  m_hotkey_scheduler->deleteLater();
-}
-
-static void InstallHotkeyFilter(QDialog* dialog)
-{
-  auto* filter = new FocusEventFilter();
-  dialog->installEventFilter(filter);
-
-  filter->connect(filter, &FocusEventFilter::focusOutEvent, [] { HotkeyManagerEmu::Enable(true); });
-  filter->connect(filter, &FocusEventFilter::focusInEvent, [] { HotkeyManagerEmu::Enable(false); });
+  HotkeyManagerEmu::Initialize();
 }
 
 void MainWindow::CreateComponents()
@@ -104,13 +73,9 @@ void MainWindow::CreateComponents()
   m_game_list = new GameList(this);
   m_render_widget = new RenderWidget;
   m_stack = new QStackedWidget(this);
+  m_paths_dialog = new PathDialog(this);
   m_controllers_window = new ControllersWindow(this);
   m_settings_window = new SettingsWindow(this);
-  m_hotkey_window = new MappingWindow(this, 0);
-
-  InstallHotkeyFilter(m_hotkey_window);
-  InstallHotkeyFilter(m_controllers_window);
-  InstallHotkeyFilter(m_settings_window);
 }
 
 void MainWindow::ConnectMenuBar()
@@ -139,9 +104,6 @@ void MainWindow::ConnectMenuBar()
   connect(m_menu_bar, &MenuBar::StateSaveOldest, this, &MainWindow::StateSaveOldest);
   connect(m_menu_bar, &MenuBar::SetStateSlot, this, &MainWindow::SetStateSlot);
 
-  // Options
-  connect(m_menu_bar, &MenuBar::ConfigureHotkeys, this, &MainWindow::ShowHotkeyDialog);
-
   // View
   connect(m_menu_bar, &MenuBar::ShowTable, m_game_list, &GameList::SetTableView);
   connect(m_menu_bar, &MenuBar::ShowList, m_game_list, &GameList::SetListView);
@@ -159,22 +121,6 @@ void MainWindow::ConnectMenuBar()
           [=]() { m_controllers_window->OnEmulationStateChanged(false); });
 }
 
-void MainWindow::ConnectHotkeys()
-{
-  connect(m_hotkey_scheduler, &HotkeyScheduler::ExitHotkey, this, &MainWindow::close);
-  connect(m_hotkey_scheduler, &HotkeyScheduler::PauseHotkey, this, &MainWindow::Pause);
-  connect(m_hotkey_scheduler, &HotkeyScheduler::StopHotkey, this, &MainWindow::Stop);
-  connect(m_hotkey_scheduler, &HotkeyScheduler::ScreenShotHotkey, this, &MainWindow::ScreenShot);
-  connect(m_hotkey_scheduler, &HotkeyScheduler::FullScreenHotkey, this, &MainWindow::FullScreen);
-
-  connect(m_hotkey_scheduler, &HotkeyScheduler::StateLoadSlotHotkey, this,
-          &MainWindow::StateLoadSlot);
-  connect(m_hotkey_scheduler, &HotkeyScheduler::StateSaveSlotHotkey, this,
-          &MainWindow::StateSaveSlot);
-  connect(m_hotkey_scheduler, &HotkeyScheduler::SetStateSlotHotkey, this,
-          &MainWindow::SetStateSlot);
-}
-
 void MainWindow::ConnectToolBar()
 {
   addToolBar(m_tool_bar);
@@ -184,6 +130,7 @@ void MainWindow::ConnectToolBar()
   connect(m_tool_bar, &ToolBar::StopPressed, this, &MainWindow::Stop);
   connect(m_tool_bar, &ToolBar::FullScreenPressed, this, &MainWindow::FullScreen);
   connect(m_tool_bar, &ToolBar::ScreenShotPressed, this, &MainWindow::ScreenShot);
+  connect(m_tool_bar, &ToolBar::PathsPressed, this, &MainWindow::ShowPathsDialog);
   connect(m_tool_bar, &ToolBar::SettingsPressed, this, &MainWindow::ShowSettingsWindow);
   connect(m_tool_bar, &ToolBar::ControllersPressed, this, &MainWindow::ShowControllersWindow);
 
@@ -210,6 +157,12 @@ void MainWindow::ConnectStack()
   m_stack->setMinimumSize(800, 600);
   m_stack->addWidget(m_game_list);
   setCentralWidget(m_stack);
+}
+
+void MainWindow::ConnectPathsDialog()
+{
+  connect(m_paths_dialog, &PathDialog::PathAdded, m_game_list, &GameList::DirectoryAdded);
+  connect(m_paths_dialog, &PathDialog::PathRemoved, m_game_list, &GameList::DirectoryRemoved);
 }
 
 void MainWindow::Open()
@@ -243,14 +196,18 @@ void MainWindow::Play()
     }
     else
     {
-      QString default_path = Settings::Instance().GetDefaultGame();
+      QString default_path = Settings().GetDefaultGame();
       if (!default_path.isEmpty() && QFile::exists(default_path))
       {
         StartGame(default_path);
       }
       else
       {
-        Open();
+        QString last_path = Settings().GetLastGame();
+        if (!last_path.isEmpty() && QFile::exists(last_path))
+          StartGame(last_path);
+        else
+          Open();
       }
     }
   }
@@ -265,7 +222,7 @@ void MainWindow::Pause()
 bool MainWindow::Stop()
 {
   bool stop = true;
-  if (Settings::Instance().GetConfirmStop())
+  if (Settings().GetConfirmStop())
   {
     // We could pause the game here and resume it if they say no.
     QMessageBox::StandardButton confirm;
@@ -332,11 +289,12 @@ void MainWindow::StartGame(const QString& path)
       return;
   }
   // Boot up, show an error if it fails to load the game.
-  if (!BootManager::BootCore(BootParameters::GenerateFromFile(path.toStdString())))
+  if (!BootManager::BootCore(path.toStdString(), SConfig::BOOT_DEFAULT))
   {
     QMessageBox::critical(this, tr("Error"), tr("Failed to init core"), QMessageBox::Ok);
     return;
   }
+  Settings().SetLastGame(path);
   ShowRenderWidget();
   emit EmulationStarted();
 
@@ -350,7 +308,7 @@ void MainWindow::StartGame(const QString& path)
 
 void MainWindow::ShowRenderWidget()
 {
-  auto& settings = Settings::Instance();
+  Settings settings;
   if (settings.GetRenderToMain())
   {
     // If we're rendering to main, add it to the stack and update our title when necessary.
@@ -384,9 +342,16 @@ void MainWindow::HideRenderWidget()
     m_render_widget->setParent(nullptr);
     m_rendering_to_main = false;
     disconnect(Host::GetInstance(), &Host::RequestTitle, this, &MainWindow::setWindowTitle);
-    setWindowTitle(QString::fromStdString(scm_rev_str));
+    setWindowTitle(tr("Dolphin"));
   }
   m_render_widget->hide();
+}
+
+void MainWindow::ShowPathsDialog()
+{
+  m_paths_dialog->show();
+  m_paths_dialog->raise();
+  m_paths_dialog->activateWindow();
 }
 
 void MainWindow::ShowControllersWindow()
@@ -407,14 +372,6 @@ void MainWindow::ShowAboutDialog()
 {
   AboutDialog* about = new AboutDialog(this);
   about->show();
-}
-
-void MainWindow::ShowHotkeyDialog()
-{
-  m_hotkey_window->ChangeMappingType(MappingWindow::Type::MAPPING_HOTKEYS);
-  m_hotkey_window->show();
-  m_hotkey_window->raise();
-  m_hotkey_window->activateWindow();
 }
 
 void MainWindow::StateLoad()
@@ -470,6 +427,6 @@ void MainWindow::StateSaveOldest()
 
 void MainWindow::SetStateSlot(int slot)
 {
-  Settings::Instance().SetStateSlot(slot);
+  Settings().SetStateSlot(slot);
   m_state_slot = slot;
 }

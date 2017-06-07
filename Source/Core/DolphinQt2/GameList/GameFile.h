@@ -18,7 +18,7 @@ enum class Country;
 enum class Language;
 enum class Region;
 enum class Platform;
-class Volume;
+class IVolume;
 }
 
 // TODO cache
@@ -76,7 +76,7 @@ private:
   QString GetBannerString(const QMap<DiscIO::Language, QString>& m) const;
 
   QString GetCacheFileName() const;
-  void ReadBanner(const DiscIO::Volume& volume);
+  void ReadBanner(const DiscIO::IVolume& volume);
   bool LoadFileInfo(const QString& path);
   void LoadState();
   bool IsElfOrDol();

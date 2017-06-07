@@ -16,7 +16,6 @@
 
 #include <array>
 #include <memory>
-#include <optional>
 #include <string>
 
 #include "Common/CommonTypes.h"
@@ -36,10 +35,10 @@ enum class BlobType
   TGC
 };
 
-class BlobReader
+class IBlobReader
 {
 public:
-  virtual ~BlobReader() {}
+  virtual ~IBlobReader() {}
   virtual BlobType GetBlobType() const = 0;
   virtual u64 GetRawSize() const = 0;
   virtual u64 GetDataSize() const = 0;
@@ -47,22 +46,23 @@ public:
   // NOT thread-safe - can't call this from multiple threads.
   virtual bool Read(u64 offset, u64 size, u8* out_ptr) = 0;
   template <typename T>
-  std::optional<T> ReadSwapped(u64 offset)
+  bool ReadSwapped(u64 offset, T* buffer)
   {
     T temp;
     if (!Read(offset, sizeof(T), reinterpret_cast<u8*>(&temp)))
-      return {};
-    return Common::FromBigEndian(temp);
+      return false;
+    *buffer = Common::FromBigEndian(temp);
+    return true;
   }
 
 protected:
-  BlobReader() {}
+  IBlobReader() {}
 };
 
 // Provides caching and byte-operation-to-block-operations facilities.
 // Used for compressed blob and direct drive reading.
 // NOTE: GetDataSize() is expected to be evenly divisible by the sector size.
-class SectorReader : public BlobReader
+class SectorReader : public IBlobReader
 {
 public:
   virtual ~SectorReader() = 0;
@@ -147,8 +147,8 @@ private:
   std::array<Cache, CACHE_LINES> m_cache;
 };
 
-// Factory function - examines the path to choose the right type of BlobReader, and returns one.
-std::unique_ptr<BlobReader> CreateBlobReader(const std::string& filename);
+// Factory function - examines the path to choose the right type of IBlobReader, and returns one.
+std::unique_ptr<IBlobReader> CreateBlobReader(const std::string& filename);
 
 typedef bool (*CompressCB)(const std::string& text, float percent, void* arg);
 

@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "Core/PowerPC/Jit64Common/Jit64AsmCommon.h"
-
-#include <array>
-
 #include "Common/Assert.h"
 #include "Common/CPUDetect.h"
 #include "Common/CommonTypes.h"

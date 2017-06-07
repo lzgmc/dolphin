@@ -11,13 +11,10 @@
 #pragma once
 
 #include <functional>
-#include <memory>
 #include <string>
 #include <vector>
 
 #include "Common/CommonTypes.h"
-
-struct BootParameters;
 
 namespace Core
 {
@@ -34,7 +31,7 @@ enum class State
   Stopping
 };
 
-bool Init(std::unique_ptr<BootParameters> boot);
+bool Init();
 void Stop();
 void Shutdown();
 

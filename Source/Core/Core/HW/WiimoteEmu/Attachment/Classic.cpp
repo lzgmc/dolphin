@@ -63,11 +63,8 @@ Classic::Classic(ExtensionReg& reg) : Attachment(_trans("Classic"), reg)
 {
   // buttons
   groups.emplace_back(m_buttons = new ControllerEmu::Buttons(_trans("Buttons")));
-  for (const char* button_name : classic_button_names)
-  {
-    const std::string& ui_name = (button_name == std::string("Home")) ? "HOME" : button_name;
-    m_buttons->controls.emplace_back(new ControllerEmu::Input(button_name, ui_name));
-  }
+  for (auto& classic_button_name : classic_button_names)
+    m_buttons->controls.emplace_back(new ControllerEmu::Input(classic_button_name));
 
   // sticks
   groups.emplace_back(m_left_stick = new ControllerEmu::AnalogStick(
@@ -77,12 +74,12 @@ Classic::Classic(ExtensionReg& reg) : Attachment(_trans("Classic"), reg)
 
   // triggers
   groups.emplace_back(m_triggers = new ControllerEmu::MixedTriggers(_trans("Triggers")));
-  for (const char* trigger_name : classic_trigger_names)
-    m_triggers->controls.emplace_back(new ControllerEmu::Input(trigger_name));
+  for (auto& classic_trigger_name : classic_trigger_names)
+    m_triggers->controls.emplace_back(new ControllerEmu::Input(classic_trigger_name));
 
   // dpad
   groups.emplace_back(m_dpad = new ControllerEmu::Buttons(_trans("D-Pad")));
-  for (const char* named_direction : named_directions)
+  for (auto& named_direction : named_directions)
     m_dpad->controls.emplace_back(new ControllerEmu::Input(named_direction));
 
   // Set up register

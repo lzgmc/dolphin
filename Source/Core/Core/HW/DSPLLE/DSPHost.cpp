@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "Core/DSP/DSPHost.h"
-
-#include <string>
-
 #include "Common/CommonTypes.h"
 #include "Common/Hash.h"
 #include "Common/Logging/Log.h"

@@ -4,11 +4,7 @@
 
 #include "Core/Debugger/RSO.h"
 
-#include <cstddef>
-#include <list>
-#include <string>
 #include <utility>
-#include <vector>
 
 #include "Common/CommonFuncs.h"
 #include "Common/Logging/Log.h"

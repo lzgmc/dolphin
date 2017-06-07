@@ -2,8 +2,7 @@
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
 
-#include <array>
-#include <cassert>
+#include <assert.h>
 #include <cinttypes>
 #include <string>
 

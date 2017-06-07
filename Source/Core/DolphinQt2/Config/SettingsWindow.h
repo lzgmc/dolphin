@@ -4,14 +4,18 @@
 
 #pragma once
 
-#include <string>
-
 #include <QDialog>
-
-class QGroupBox;
-class QListWidget;
-class QListWidgetItem;
-class QStackedWidget;
+#include <QDialogButtonBox>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QListView>
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QStackedWidget>
+#include <QString>
+#include <QVBoxLayout>
+#include <QWidget>
 
 class SettingsWindow final : public QDialog
 {
@@ -25,7 +29,7 @@ public slots:
 private:
   void MakeCategoryList();
   void MakeUnfinishedWarning();
-  void AddCategoryToList(const QString& title, const std::string& icon_name);
+  void AddCategoryToList(const QString& title, const QString& icon);
   void SetupSettingsWidget();
   QStackedWidget* m_settings_outer;
   QListWidget* m_categories;

@@ -4,8 +4,6 @@
 
 #include "Core/HW/EXI/EXI_DeviceDummy.h"
 
-#include <string>
-
 #include "Common/CommonTypes.h"
 #include "Common/Logging/Log.h"
 

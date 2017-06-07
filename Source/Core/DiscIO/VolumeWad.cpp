@@ -7,7 +7,6 @@
 #include <locale>
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -25,16 +24,16 @@
 
 namespace DiscIO
 {
-VolumeWAD::VolumeWAD(std::unique_ptr<BlobReader> reader) : m_reader(std::move(reader))
+CVolumeWAD::CVolumeWAD(std::unique_ptr<IBlobReader> reader) : m_reader(std::move(reader))
 {
   _assert_(m_reader);
 
   // Source: http://wiibrew.org/wiki/WAD_files
-  m_hdr_size = m_reader->ReadSwapped<u32>(0x00).value_or(0);
-  m_cert_size = m_reader->ReadSwapped<u32>(0x08).value_or(0);
-  m_tick_size = m_reader->ReadSwapped<u32>(0x10).value_or(0);
-  m_tmd_size = m_reader->ReadSwapped<u32>(0x14).value_or(0);
-  m_data_size = m_reader->ReadSwapped<u32>(0x18).value_or(0);
+  m_reader->ReadSwapped(0x00, &m_hdr_size);
+  m_reader->ReadSwapped(0x08, &m_cert_size);
+  m_reader->ReadSwapped(0x10, &m_tick_size);
+  m_reader->ReadSwapped(0x14, &m_tmd_size);
+  m_reader->ReadSwapped(0x18, &m_data_size);
 
   m_offset = Common::AlignUp(m_hdr_size, 0x40) + Common::AlignUp(m_cert_size, 0x40);
   m_tmd_offset = Common::AlignUp(m_hdr_size, 0x40) + Common::AlignUp(m_cert_size, 0x40) +
@@ -53,11 +52,11 @@ VolumeWAD::VolumeWAD(std::unique_ptr<BlobReader> reader) : m_reader(std::move(re
   m_tmd.SetBytes(std::move(tmd_buffer));
 }
 
-VolumeWAD::~VolumeWAD()
+CVolumeWAD::~CVolumeWAD()
 {
 }
 
-bool VolumeWAD::Read(u64 offset, u64 length, u8* buffer, const Partition& partition) const
+bool CVolumeWAD::Read(u64 offset, u64 length, u8* buffer, const Partition& partition) const
 {
   if (partition != PARTITION_NONE)
     return false;
@@ -65,14 +64,14 @@ bool VolumeWAD::Read(u64 offset, u64 length, u8* buffer, const Partition& partit
   return m_reader->Read(offset, length, buffer);
 }
 
-Region VolumeWAD::GetRegion() const
+Region CVolumeWAD::GetRegion() const
 {
   if (!m_tmd.IsValid())
     return Region::UNKNOWN_REGION;
   return m_tmd.GetRegion();
 }
 
-Country VolumeWAD::GetCountry(const Partition& partition) const
+Country CVolumeWAD::GetCountry(const Partition& partition) const
 {
   if (!m_tmd.IsValid())
     return Country::COUNTRY_UNKNOWN;
@@ -84,17 +83,17 @@ Country VolumeWAD::GetCountry(const Partition& partition) const
   return CountrySwitch(country_code);
 }
 
-const IOS::ES::TMDReader& VolumeWAD::GetTMD(const Partition& partition) const
+const IOS::ES::TMDReader& CVolumeWAD::GetTMD(const Partition& partition) const
 {
   return m_tmd;
 }
 
-std::string VolumeWAD::GetGameID(const Partition& partition) const
+std::string CVolumeWAD::GetGameID(const Partition& partition) const
 {
   return m_tmd.GetGameID();
 }
 
-std::string VolumeWAD::GetMakerID(const Partition& partition) const
+std::string CVolumeWAD::GetMakerID(const Partition& partition) const
 {
   char temp[2];
   if (!Read(0x198 + m_tmd_offset, 2, (u8*)temp, partition))
@@ -108,25 +107,25 @@ std::string VolumeWAD::GetMakerID(const Partition& partition) const
   return DecodeString(temp);
 }
 
-std::optional<u64> VolumeWAD::GetTitleID(const Partition& partition) const
+bool CVolumeWAD::GetTitleID(u64* buffer, const Partition& partition) const
 {
-  return ReadSwapped<u64>(m_offset + 0x01DC, partition);
+  return ReadSwapped(m_offset + 0x01DC, buffer, partition);
 }
 
-std::optional<u16> VolumeWAD::GetRevision(const Partition& partition) const
+u16 CVolumeWAD::GetRevision(const Partition& partition) const
 {
   if (!m_tmd.IsValid())
-    return {};
+    return 0;
 
   return m_tmd.GetTitleVersion();
 }
 
-Platform VolumeWAD::GetVolumeType() const
+Platform CVolumeWAD::GetVolumeType() const
 {
   return Platform::WII_WAD;
 }
 
-std::map<Language, std::string> VolumeWAD::GetLongNames() const
+std::map<Language, std::string> CVolumeWAD::GetLongNames() const
 {
   if (!m_tmd.IsValid() || !IOS::ES::IsChannel(m_tmd.GetTitleId()))
     return {};
@@ -137,29 +136,29 @@ std::map<Language, std::string> VolumeWAD::GetLongNames() const
   return ReadWiiNames(name_data);
 }
 
-std::vector<u32> VolumeWAD::GetBanner(int* width, int* height) const
+std::vector<u32> CVolumeWAD::GetBanner(int* width, int* height) const
 {
   *width = 0;
   *height = 0;
 
-  const std::optional<u64> title_id = GetTitleID();
-  if (!title_id)
+  u64 title_id;
+  if (!GetTitleID(&title_id))
     return std::vector<u32>();
 
-  return GetWiiBanner(width, height, *title_id);
+  return GetWiiBanner(width, height, title_id);
 }
 
-BlobType VolumeWAD::GetBlobType() const
+BlobType CVolumeWAD::GetBlobType() const
 {
   return m_reader->GetBlobType();
 }
 
-u64 VolumeWAD::GetSize() const
+u64 CVolumeWAD::GetSize() const
 {
   return m_reader->GetDataSize();
 }
 
-u64 VolumeWAD::GetRawSize() const
+u64 CVolumeWAD::GetRawSize() const
 {
   return m_reader->GetRawSize();
 }

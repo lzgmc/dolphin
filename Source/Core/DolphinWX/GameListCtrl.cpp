@@ -297,14 +297,11 @@ CGameListCtrl::~CGameListCtrl()
 
 template <typename T>
 static void InitBitmap(wxImageList* img_list, std::vector<int>* vector, wxWindow* context,
-                       const wxSize& usable_size, T index, const std::string& name,
-                       bool themed = false)
+                       const wxSize& usable_size, T index, const std::string& name)
 {
   wxSize size = img_list->GetSize();
-  auto bitmap_fnc = themed ? WxUtils::LoadScaledThemeBitmap : WxUtils::LoadScaledResourceBitmap;
-  (*vector)[static_cast<size_t>(index)] = img_list->Add(
-      bitmap_fnc(name, context, size, usable_size, WxUtils::LSI_SCALE | WxUtils::LSI_ALIGN_VCENTER,
-                 wxTransparentColour));
+  (*vector)[static_cast<size_t>(index)] = img_list->Add(WxUtils::LoadScaledResourceBitmap(
+      name, context, size, usable_size, WxUtils::LSI_SCALE | WxUtils::LSI_ALIGN_VCENTER));
 }
 
 void CGameListCtrl::InitBitmaps()
@@ -357,12 +354,12 @@ void CGameListCtrl::InitBitmaps()
              "Platform_File");
 
   m_EmuStateImageIndex.resize(6);
-  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 0, "rating0", true);
-  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 1, "rating1", true);
-  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 2, "rating2", true);
-  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 3, "rating3", true);
-  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 4, "rating4", true);
-  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 5, "rating5", true);
+  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 0, "rating0");
+  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 1, "rating1");
+  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 2, "rating2");
+  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 3, "rating3");
+  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 4, "rating4");
+  InitBitmap(img_list, &m_EmuStateImageIndex, this, rating_bmp_size, 5, "rating5");
 
   m_utility_game_banners.resize(1);
   InitBitmap(img_list, &m_utility_game_banners, this, size, 0, "nobanner");

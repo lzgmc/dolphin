@@ -33,7 +33,6 @@ public:
 
 private:
   Resources() {}
-  static void InitThemeIcons();
   static QIcon GetIcon(const QString& name, const QString& dir);
   static QPixmap GetPixmap(const QString& name, const QString& dir);
 

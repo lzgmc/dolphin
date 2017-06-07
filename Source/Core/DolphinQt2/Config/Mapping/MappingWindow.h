@@ -41,9 +41,7 @@ public:
     MAPPING_GC_STEERINGWHEEL,
     // Wii
     MAPPING_WIIMOTE_EMU,
-    MAPPING_WIIMOTE_HYBRID,
-    // Hotkeys
-    MAPPING_HOTKEYS
+    MAPPING_WIIMOTE_HYBRID
   };
 
   explicit MappingWindow(QWidget* parent, int port_num);

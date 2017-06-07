@@ -14,7 +14,7 @@
 
 namespace DiscIO
 {
-class PlainFileReader : public BlobReader
+class PlainFileReader : public IBlobReader
 {
 public:
   static std::unique_ptr<PlainFileReader> Create(File::IOFile file);

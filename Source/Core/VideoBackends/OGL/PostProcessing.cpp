@@ -9,8 +9,6 @@
 #include "Common/Logging/Log.h"
 #include "Common/StringUtil.h"
 
-#include "Core/Config/GraphicsSettings.h"
-
 #include "VideoBackends/OGL/FramebufferManager.h"
 #include "VideoBackends/OGL/ProgramShaderCache.h"
 #include "VideoBackends/OGL/SamplerCache.h"
@@ -141,7 +139,7 @@ void OpenGLPostProcessing::ApplyShader()
   if (!ProgramShaderCache::CompileShader(m_shader, s_vertex_shader, code))
   {
     ERROR_LOG(VIDEO, "Failed to compile post-processing shader %s", m_config.GetShader().c_str());
-    Config::SetCurrent(Config::GFX_ENHANCE_POST_SHADER, std::string(""));
+    g_ActiveConfig.sPostProcessingShader.clear();
     code = m_config.LoadShader();
     ProgramShaderCache::CompileShader(m_shader, s_vertex_shader, code);
   }

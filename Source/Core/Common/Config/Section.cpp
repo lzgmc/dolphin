@@ -2,6 +2,7 @@
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
 
+#include <array>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -253,7 +254,13 @@ bool RecursiveSection::Exists(const std::string& key) const
 bool RecursiveSection::Get(const std::string& key, std::string* value,
                            const std::string& default_value) const
 {
-  for (auto layer_id : SEARCH_ORDER)
+  static constexpr std::array<LayerType, 7> search_order = {{
+      // Skip the meta layer
+      LayerType::CurrentRun, LayerType::CommandLine, LayerType::Movie, LayerType::Netplay,
+      LayerType::LocalGame, LayerType::GlobalGame, LayerType::Base,
+  }};
+
+  for (auto layer_id : search_order)
   {
     auto layers_it = Config::GetLayers()->find(layer_id);
     if (layers_it == Config::GetLayers()->end())

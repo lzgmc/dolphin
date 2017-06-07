@@ -173,9 +173,8 @@ void CCodeWindow::OnSymbolsMenu(wxCommandEvent& event)
   if (!Core::IsRunning())
     return;
 
-  const std::string& title_id_str = SConfig::GetInstance().m_debugger_game_id;
-  std::string existing_map_file, writable_map_file;
-  bool map_exists = CBoot::FindMapFile(&existing_map_file, &writable_map_file);
+  std::string existing_map_file, writable_map_file, title_id_str;
+  bool map_exists = CBoot::FindMapFile(&existing_map_file, &writable_map_file, &title_id_str);
   switch (event.GetId())
   {
   case IDM_CLEAR_SYMBOLS:
