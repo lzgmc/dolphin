@@ -6,7 +6,6 @@
 #include <cstring>
 #include <thread>
 
-#include "AudioCommon/DPL2Decoder.h"
 #include "AudioCommon/OpenALStream.h"
 #include "AudioCommon/aldlist.h"
 #include "Common/Logging/Log.h"
@@ -65,9 +64,6 @@ bool OpenALStream::Start()
   {
     PanicAlertT("OpenAL: can't find sound devices");
   }
-
-  // Initialize DPL2 parameters
-  DPL2Reset();
 
   return bReturn;
 }
@@ -159,32 +155,29 @@ static ALenum CheckALError(const char* desc)
   return err;
 }
 
+static bool IsCreativeXFi()
+{
+  return strstr(alGetString(AL_RENDERER), "X-Fi") != nullptr;
+}
+
 void OpenALStream::SoundLoop()
 {
   Common::SetCurrentThreadName("Audio thread - openal");
 
-  bool surround_capable = SConfig::GetInstance().bDPL2Decoder;
-  bool float32_capable = false;
-  bool fixed32_capable = false;
+  bool float32_capable = alIsExtensionPresent("AL_EXT_float32") != 0;
+  bool surround_capable = alIsExtensionPresent("AL_EXT_MCFORMATS") || IsCreativeXFi();
+  bool use_surround = SConfig::GetInstance().bDPL2Decoder && surround_capable;
 
-#if defined(__APPLE__)
-  surround_capable = false;
-#endif
+  // As there is no extension to check for 32-bit fixed point support
+  // and we know that only a X-Fi with hardware OpenAL supports it,
+  // we just check if one is being used.
+  bool fixed32_capable = IsCreativeXFi();
 
   u32 ulFrequency = m_mixer->GetSampleRate();
   numBuffers = SConfig::GetInstance().iLatency + 2;  // OpenAL requires a minimum of two buffers
 
   memset(uiBuffers, 0, numBuffers * sizeof(ALuint));
   uiSource = 0;
-
-  if (alIsExtensionPresent("AL_EXT_float32"))
-    float32_capable = true;
-
-  // As there is no extension to check for 32-bit fixed point support
-  // and we know that only a X-Fi with hardware OpenAL supports it,
-  // we just check if one is being used.
-  if (strstr(alGetString(AL_RENDERER), "X-Fi"))
-    fixed32_capable = true;
 
   // Clear error state before querying or else we get false positives.
   ALenum err = alGetError();
@@ -228,23 +221,18 @@ void OpenALStream::SoundLoop()
       numBuffersQueued -= numBuffersProcessed;
     }
 
-    // DPL2 accepts 240 samples minimum (FWRDURATION)
-    unsigned int minSamples = surround_capable ? 240 : 0;
-
     unsigned int numSamples = OAL_MAX_SAMPLES;
-    numSamples = m_mixer->Mix(realtimeBuffer, numSamples);
 
-    // Convert the samples from short to float
-    for (u32 i = 0; i < numSamples * STEREO_CHANNELS; ++i)
-      sampleBuffer[i] = static_cast<float>(realtimeBuffer[i]) / (1 << 15);
-
-    if (numSamples <= minSamples)
-      continue;
-
-    if (surround_capable)
+    if (use_surround)
     {
+      // DPL2 accepts 240 samples minimum (FWRDURATION)
+      unsigned int minSamples = 240;
+
       float dpl2[OAL_MAX_SAMPLES * OAL_MAX_BUFFERS * SURROUND_CHANNELS];
-      DPL2Decode(sampleBuffer, numSamples, dpl2);
+      numSamples = m_mixer->MixSurround(dpl2, numSamples);
+
+      if (numSamples < minSamples)
+        continue;
 
       // zero-out the subwoofer channel - DPL2Decode generates a pretty
       // good 5.0 but not a good 5.1 output.  Sadly there is not a 5.0
@@ -306,11 +294,20 @@ void OpenALStream::SoundLoop()
         // 5.1 is not supported by the host, fallback to stereo
         WARN_LOG(AUDIO,
                  "Unable to set 5.1 surround mode.  Updating OpenAL Soft might fix this issue.");
-        surround_capable = false;
+        use_surround = false;
       }
     }
     else
     {
+      numSamples = m_mixer->Mix(realtimeBuffer, numSamples);
+
+      // Convert the samples from short to float
+      for (u32 i = 0; i < numSamples * STEREO_CHANNELS; ++i)
+        sampleBuffer[i] = static_cast<float>(realtimeBuffer[i]) / (1 << 15);
+
+      if (!numSamples)
+        continue;
+
       if (float32_capable)
       {
         alBufferData(uiBuffers[nextBuffer], AL_FORMAT_STEREO_FLOAT32, sampleBuffer,

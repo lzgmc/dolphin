@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="DiscScrubber">
       <UniqueIdentifier>{3873659a-9a30-4a58-af9e-8dad7d7eb627}</UniqueIdentifier>
@@ -63,10 +63,10 @@
     <ClCompile Include="VolumeWad.cpp">
       <Filter>Volume</Filter>
     </ClCompile>
-    <ClCompile Include="VolumeWiiCrypted.cpp">
+    <ClCompile Include="Enums.cpp">
       <Filter>Volume</Filter>
     </ClCompile>
-    <ClCompile Include="Enums.cpp">
+    <ClCompile Include="VolumeWii.cpp">
       <Filter>Volume</Filter>
     </ClCompile>
     <ClCompile Include="Volume.cpp">
@@ -125,7 +125,7 @@
     <ClInclude Include="VolumeWad.h">
       <Filter>Volume</Filter>
     </ClInclude>
-    <ClInclude Include="VolumeWiiCrypted.h">
+    <ClInclude Include="VolumeWii.h">
       <Filter>Volume</Filter>
     </ClInclude>
     <ClInclude Include="Enums.h">

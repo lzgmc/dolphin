@@ -5,10 +5,12 @@
 #include "Core/IOS/ES/Formats.h"
 
 #include <algorithm>
+#include <array>
 #include <cinttypes>
 #include <cstddef>
 #include <cstring>
 #include <locale>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -419,12 +421,13 @@ SharedContentMap::SharedContentMap(Common::FromWhichRoot root) : m_root(root)
 
 SharedContentMap::~SharedContentMap() = default;
 
-std::string SharedContentMap::GetFilenameFromSHA1(const std::array<u8, 20>& sha1) const
+std::optional<std::string>
+SharedContentMap::GetFilenameFromSHA1(const std::array<u8, 20>& sha1) const
 {
   const auto it = std::find_if(m_entries.begin(), m_entries.end(),
                                [&sha1](const auto& entry) { return entry.sha1 == sha1; });
   if (it == m_entries.end())
-    return "unk";
+    return {};
 
   const std::string id_string(it->id.begin(), it->id.end());
   return Common::RootUserPath(m_root) + StringFromFormat("/shared1/%s.app", id_string.c_str());
@@ -442,9 +445,9 @@ std::vector<std::array<u8, 20>> SharedContentMap::GetHashes() const
 
 std::string SharedContentMap::AddSharedContent(const std::array<u8, 20>& sha1)
 {
-  std::string filename = GetFilenameFromSHA1(sha1);
-  if (filename != "unk")
-    return filename;
+  auto filename = GetFilenameFromSHA1(sha1);
+  if (filename)
+    return *filename;
 
   const std::string id = StringFromFormat("%08x", m_last_id);
   Entry entry;
@@ -455,7 +458,7 @@ std::string SharedContentMap::AddSharedContent(const std::array<u8, 20>& sha1)
   WriteEntries();
   filename = Common::RootUserPath(m_root) + StringFromFormat("/shared1/%s.app", id.c_str());
   m_last_id++;
-  return filename;
+  return *filename;
 }
 
 bool SharedContentMap::DeleteSharedContent(const std::array<u8, 20>& sha1)
