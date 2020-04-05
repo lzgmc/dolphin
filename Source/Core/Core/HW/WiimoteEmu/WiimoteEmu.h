@@ -11,7 +11,7 @@
 #include "Core/HW/WiimoteCommon/WiimoteReport.h"
 #include "Core/HW/WiimoteEmu/Encryption.h"
 #include "InputCommon/ControllerEmu/ControllerEmu.h"
-#include "InputCommon\UDPWrapper.h"
+#include "InputCommon/UDPWrapper.h"
 
 // Registry sizes
 #define WIIMOTE_EEPROM_SIZE (16 * 1024)
@@ -113,76 +113,7 @@ enum class TurntableGroup
   RightTable,
   Crossfade
 };
-=======
-	enum class WiimoteGroup
-	{
-		Buttons,
-		DPad,
-		Shake,
-		IR,
-		Tilt,
-		Swing,
-		Rumble,
-		Extension,
 
-		Options,
-		Hotkeys
-	};
-
-	enum
-	{
-		EXT_NONE,
-
-		EXT_NUNCHUK,
-		EXT_CLASSIC,
-		EXT_GUITAR,
-		EXT_DRUMS,
-		EXT_TURNTABLE
-	};
-
-	enum class NunchukGroup
-	{
-		Buttons,
-		Stick,
-		Tilt,
-		Swing,
-		Shake
-	};
-
-	enum class ClassicGroup
-	{
-		Buttons,
-		Triggers,
-		DPad,
-		LeftStick,
-		RightStick
-	};
-
-	enum class GuitarGroup
-	{
-		Buttons,
-		Frets,
-		Strum,
-		Whammy,
-		Stick
-	};
-
-	enum class DrumsGroup
-	{
-		Buttons,
-		Pads,
-		Stick
-	};
-
-	enum class TurntableGroup
-	{
-		Buttons,
-		Stick,
-		EffectDial,
-		LeftTable,
-		RightTable,
-		Crossfade
-	};
 
 #pragma pack(push, 1)
 
